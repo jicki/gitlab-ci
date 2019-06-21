@@ -1,0 +1,41 @@
+# 调试开启
+before_script:
+#  - pwd
+  - env
+
+cache:
+  key: $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA
+  paths:
+    - build
+
+stages:
+  - build
+  - deploy
+
+auto-build:
+  image: jicki/gradle:3.2.1
+  stage: build
+  script:
+    - gradle --no-daemon clean build jar --stacktrace --debug
+  tags:
+    - JavaProject
+
+deploy:
+  image: jicki/build:alpine
+  stage: deploy
+  script:
+    - source build/tmp/PROJECT_ENV
+    - echo "Build Docker Image ==> ${IMAGE_NAME}"
+    - docker build -t ${IMAGE_NAME} --build-arg PROJECT_BUILD_FINALNAME=${PROJECT_BUILD_FINALNAME} .
+#    - docker push ${IMAGE_NAME}
+    - docker tag ${IMAGE_NAME} ${LATEST_IMAGE_NAME}
+    - docker rmi ${LATEST_IMAGE_NAME}
+#    - docker push ${LATEST_IMAGE_NAME}
+#    - docker rmi ${IMAGE_NAME} ${LATEST_IMAGE_NAME}
+#    - kubectl --kubeconfig ${KUBE_CONFIG} set image deployment/test test=$IMAGE_NAME
+  tags:
+    - JavaProject
+  only:
+    - master
+    - develop
+    - /^chore.*$/
