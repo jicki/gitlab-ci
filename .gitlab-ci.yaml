@@ -33,6 +33,11 @@ deploy:
 #    - docker push ${LATEST_IMAGE_NAME}
 #    - docker rmi ${IMAGE_NAME} ${LATEST_IMAGE_NAME}
 #    - kubectl --kubeconfig ${KUBE_CONFIG} set image deployment/test test=$IMAGE_NAME
+#    - echo "$(sed -i 's%jicki/hd-cloud-admin.*$%'"${IMAGE_NAME}"'%g' /opt/compose/docker-compose.yaml)" > /opt/compose/docker-compose.yaml
+    - sed -i 's%jicki/hd-cloud-admin.*$%'"${IMAGE_NAME}"'%g' /opt/compose/docker-compose.yaml
+    - echo "Restart JavaProject to docker-compose"
+    - docker-compose -f /opt/compose/docker-compose.yaml up -d hd-cloud-admin
+    - docker ps -a|grep hd-cloud-admin
   tags:
     - JavaProject
   only:
